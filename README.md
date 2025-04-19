@@ -3,4 +3,6 @@ You realized that you want to create, for example, an Object show, but the progr
 
 <img src="cinemy.jpg" alt="cinemy" width="200">
 
-Cinemy, Objectnimator's Mascot © 2025 by B4uti4GD is licensed under CC BY-NC 4.0 
+Cinemy, Objectnimator's Mascot © 2025 by B4uti4GD is licensed under CC BY-NC 4.0
+
+We need you to know how to use Node JS to program.
