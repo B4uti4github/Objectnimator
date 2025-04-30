@@ -9,23 +9,35 @@
     <div class="pagemain">
         <header>
             <strong><h1>Objectnimator</h1></strong>
+            <a class="applink" href="app.html">App</a>
         </header>
         <main>
             <h1>An Open source and FREE app for making objects shows or animated shows</h1>
             <img class="cinemy" width="300" height="300" src="cinemy.png" alt="cinemy">Cinemy, Objectnimator's Mascot © 2025 by B4uti4GD is licensed under CC BY-NC 4.0</img>
         </main>
         <footer>
-            <h3>Made with love for our community, dedicated to </h3>
+            <h3 class="crefooter">Made with love for our community, dedicated to </h3>
             <a class="BFDI" href="https://www.youtube.com/@BFDI">jacknjellify</a>
+            <h6>Comment on something you dislike or that doesn't look right or isn't right in the app, such as an issue on GitHub Issues.</h6>
         </footer>
     </div>
     <style>
+        .applink{
+            color: white;
+            font-size: x-large;
+        }
+        .crefooter{
+            padding: 10px;
+            place-content: center;
+            margin: auto;
+        }
         .cinemy{
             max-width: 50%;
             height: auto;
             margin: auto;
         }
         .BFDI{
+            place-content: center;
             margin: auto;
             color: white;
         }
@@ -35,9 +47,11 @@
             grid-template-rows: auto 1fr auto;
         }
         header{
-            display: grid;
+            display: flex;
             background-color: rgb(53, 53, 53);
             justify-content: space-between;
+            padding: 20px;
+            align-items: center;
             font-family: monospace;
             color: white;
         }

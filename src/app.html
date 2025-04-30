@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        <span class="appname">Objectnimator</span>
+        <button class="buttonhead">Project</button>
+        <button class="buttonhead">Animation</button>
+    </header>
+    <main>
+        <h1 class="nameshort">Shortcuts</h1>
+        <hr color="rgb(32, 32, 32)"/>
+        <button class="shortcutsbuttons" id="makeproject" color="rgb(255, 255, 255)" class="Shortcuts">Make a new project</button>
+        <dialog class="ventana" id="dialogmakeproject">
+            <h1>Make a new project</h1>
+            <hr color="rgb(32,32,32)">
+            <button class="ventana" color="rgb(0, 0, 0)" id="cancelpro">Cancelar</button>
+            <button class="ventana" id="createproject">Create project</button>
+        </dialog>
+    </main>
+    <footer>
+        <h3 class="crefooter">Made with love for our community, dedicated to </h3>
+        <a class="BFDI" href="https://www.youtube.com/@BFDI">jacknjellify</a>
+        <h6>Comment on something you dislike or that doesn't look right or isn't right in the app, such as an issue on GitHub Issues.</h6>
+    </footer>
+    <style>
+        .crefooter{
+            padding: 10px;
+            place-content: center;
+            margin: auto;
+        }
+        .ventana{
+            padding: 10px;
+            border-radius: 20px;
+            background-color: rgb(206, 206, 206);
+            border-color: rgb(167, 167, 167);
+            justify-content: center;
+            place-content: center;
+            margin-left: auto;
+            margin-right: auto;
+            border-style: solid;
+        }
+        a{
+            margin: auto;
+            place-content: center;
+            color: white;
+        }
+        .appname{
+            font-family: cursive;
+        }
+        .buttonhead{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0);
+            border-style: solid;
+            border-radius: 5px;
+            margin: 15px;
+            color: white;
+            border-color: rgb(165, 165, 165);
+        }
+        .shortcutsbuttons{
+            border-style: solid;
+            border-radius: 5px;
+            margin: 15px;
+            padding: 20px;
+            background-color: rgb(206, 206, 206);
+            color: black;
+            border-color: rgb(167, 167, 167);
+        }
+        header{
+            color: white;
+            align-items: center;
+            display: flex;
+            justify-content: flex-start;
+            background-color: rgb(24, 24, 24);
+        }
+        footer{
+            font-family: Arial, Helvetica, sans-serif;
+            display: grid;
+            color: white;
+            margin: auto;
+            justify-content: center;
+            align-items: center;
+            place-content: center;
+            background-color: black;
+        }
+        body{
+            aspect-ratio: 16 / 9;
+            background-color: beige;
+        }
+        .Shortcuts{
+            border-color: rgb(32, 32, 32);
+            color: black;
+        }
+        main{
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            height: 100%;
+            margin: auto;
+        }
+        .nameshort{
+            color: black;
+        }
+    </style>
+    <script>
+        //The variables 
+        const dialogmakepro = document.getElementById("dialogmakeproject")
+        const buttonmakepro = document.getElementById("makeproject")
+        const cancel = document.getElementById("cancelpro")
+        const createpro = document.getElementById("createproject")
+        //button functions
+        buttonmakepro.addEventListener("click", () => {
+            dialogmakepro.showModal()
+        })
+        cancel.addEventListener("click", () => {
+            dialogmakepro.close()
+        });
+        createpro.addEventListener("click", () => {
+            dialogmakepro.close()
+        });
+    </script>
+</body>
+</html>
