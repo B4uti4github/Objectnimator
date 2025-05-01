@@ -12,15 +12,20 @@
         <button class="buttonhead">Animation</button>
     </header>
     <main>
-        <h1 class="nameshort">Shortcuts</h1>
-        <hr color="rgb(32, 32, 32)"/>
-        <button class="shortcutsbuttons" id="makeproject" color="rgb(255, 255, 255)" class="Shortcuts">Make a new project</button>
-        <dialog class="ventana" id="dialogmakeproject">
-            <h1>Make a new project</h1>
-            <hr color="rgb(32,32,32)">
-            <button class="ventana" color="rgb(0, 0, 0)" id="cancelpro">Cancelar</button>
-            <button class="ventana" id="createproject">Create project</button>
-        </dialog>
+        <div id="shortcuters">
+            <h1 class="nameshort" id="nameshort">Shortcuts</h1>
+            <hr color="rgb(32, 32, 32)" id="nameshort2"/>
+            <button class="shortcutsbuttons" id="makeproject" color="rgb(255, 255, 255)" class="Shortcuts">Make a new project</button>
+            <dialog class="ventana" id="dialogmakeproject">
+                <h1>Make a new project</h1>
+                <hr color="rgb(32,32,32)">
+                <button class="ventana" color="rgb(0, 0, 0)" id="cancelpro">Cancel</button>
+                <button class="ventana" id="createproject">Create project</button>
+            </dialog>
+        </div>
+        <div id="lienzo" class="lienzo" width="100%" height="100%">
+            <img src="cinemy.png" alt="cinemy" id="cinemy" width="200"/>
+        </div>
     </main>
     <footer>
         <h3 class="crefooter">Made with love for our community, dedicated to </h3>
@@ -33,11 +38,21 @@
             place-content: center;
             margin: auto;
         }
+        .lienzo{
+            position: relative;
+            display: grid;
+            background-color: white;
+            overflow: hidden;
+            visibility: hidden;
+            width:  100%;
+            aspect-ratio: 16 / 9;
+            height: 100%;
+        }
         .ventana{
             padding: 10px;
             border-radius: 20px;
             background-color: rgb(206, 206, 206);
-            border-color: rgb(167, 167, 167);
+            border-color: rgb(94, 94, 94);
             justify-content: center;
             place-content: center;
             margin-left: auto;
@@ -61,6 +76,7 @@
             margin: 15px;
             color: white;
             border-color: rgb(165, 165, 165);
+            display: inline-block;
         }
         .shortcutsbuttons{
             border-style: solid;
@@ -79,6 +95,8 @@
             background-color: rgb(24, 24, 24);
         }
         footer{
+            margin: auto;
+            width: 100%;
             font-family: Arial, Helvetica, sans-serif;
             display: grid;
             color: white;
@@ -89,7 +107,6 @@
             background-color: black;
         }
         body{
-            aspect-ratio: 16 / 9;
             background-color: beige;
         }
         .Shortcuts{
@@ -97,6 +114,7 @@
             color: black;
         }
         main{
+            overflow: auto;
             font-family: Verdana, Geneva, Tahoma, sans-serif;
             aspect-ratio: 16 / 9;
             width: 100%;
@@ -113,16 +131,27 @@
         const buttonmakepro = document.getElementById("makeproject")
         const cancel = document.getElementById("cancelpro")
         const createpro = document.getElementById("createproject")
+        const lienzo = document.getElementById("lienzo")
+        const shortcuts = document.getElementById("nameshort")
+        const shortcuts2 = document.getElementById("nameshort2")
+        const shortcuters = document.getElementById("shortcuters")
         //button functions
         buttonmakepro.addEventListener("click", () => {
             dialogmakepro.showModal()
         })
         cancel.addEventListener("click", () => {
             dialogmakepro.close()
-        });
+        })
+        // create a project
         createpro.addEventListener("click", () => {
             dialogmakepro.close()
-        });
+            buttonmakepro.disabled = true
+            buttonmakepro.style.opacity = "0%"
+            lienzo.style.visibility = "visible"
+            shortcuts.style.visibility = "hidden"
+            shortcuts2.style.opacity = "0%"
+            shortcuters.remove()
+        })
     </script>
 </body>
 </html>
