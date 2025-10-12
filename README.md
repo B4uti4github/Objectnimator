@@ -5,7 +5,7 @@ You realized that you want to create, for example, an Object show, but the progr
 > We recommend that you learn/know how to program in HTML, CSS, and JS, including Node JS, to develop. This is not focused on users who use it for animation, but rather on those who fix bugs or develop improvements for the app.
 
 >[!IMPORTANT]
->For developers, we have to make a timeline, which is used for animation that uses keyframes, and that moves, also after that we should make the save system, recommended to use json or a custom file and that you parse it and load assets and animations without any problems almost.
+>For developers, we have to make a backend first, for rendering and calculate space, is for rendering audiovisual
 
 <img src="./default-assets/cinemy.png" alt="cinemy" width="200">
 
