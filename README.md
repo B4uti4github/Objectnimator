@@ -10,3 +10,6 @@ You realized that you want to create, for example, an Object show, but the progr
 <img src="./default-assets/cinemy.png" alt="cinemy" width="200">
 
 Cinemy, Objectnimator's Mascot © 2025 by B4uti4GD is licensed under CC BY-NC 4.0
+
+<h2>Made by the contributors of this proyect :D</h2>
+<img src="https://contrib.rocks/image?repo=b4uti4github/objectnimator"/>
