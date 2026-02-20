@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="cinemy.png" type="image/png">
-    <title>Objectnimator Studio | Rebuild Engine</title>
+    <title>Objectnimator Studio</title>
     <style>
         :root { --bg: #0a0a0a; --accent: #5c5cff; --text: #eee; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -22,27 +22,29 @@
 <body>
 
     <header class="header">
-        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.0</span></div>
+        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1</span></div>
     </header>
 
     <main class="main">
         <!-- MENÚ DE PROYECTOS -->
         <section id="project-menu" style="flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto;">
-            <h2 style="color: var(--accent);">Mis Proyectos Locales</h2>
+            <h2 style="color: var(--accent);">My local projects</h2>
             <div id="recent-list" style="width: 100%; max-width: 900px; margin-top: 20px;"></div>
             <button class="btn-ui" onclick="vincularNuevaCarpeta()" style="margin-top: 40px; width: auto; padding: 15px 30px;">+ Vincular Nueva Carpeta</button>
         </section>
 
         <!-- EDITOR -->
         <aside id="editor-sidebar" class="sidebar" style="display: none;">
-            <button class="btn-ui" onclick="document.getElementById('file-input').click()">📁 Importar Asset</button>
-            <input type="file" id="file-input" accept="image/*">
+            <button class="btn-ui" onclick="document.getElementById('file-input').click()">📁 Import Asset</button>
+            <input type="file" id="file-input" accept="image/*, audio/*" style="display: none;">
+            <button class="btn-ui" onclick='crearTexto(document.getElementById("textmaker").value, null)'>Make Text</button>
+            <input type="text" id="textmaker">
             <div id="layer-container" style="margin-top: 20px; flex: 1; overflow-y: auto;">
-                <p style="color: #666; font-size: 10px; text-transform: uppercase;">Objetos en Disco</p>
+                <p style="color: #666; font-size: 10px; text-transform: uppercase;">Objects in state</p>
             </div>
             <div style="margin-top: auto;">
-                <button class="btn-ui" style="background: #222;" onclick="guardarProyectoAlDisco()">💾 Guardar Cambios</button>
-                <button class="btn-ui" style="background: #444;" onclick="location.reload()">🏠 Menú Principal</button>
+                <button class="btn-ui" style="background: #222;" onclick="guardarProyectoAlDisco()">💾 Save Changes</button>
+                <button class="btn-ui" style="background: #444;" onclick="location.reload()">🏠 Main Menu</button>
             </div>
         </aside>
 
@@ -82,25 +84,85 @@
         let project = null;
         let sheet = null;
 
-        // --- SISTEMA DE RECONSTRUCCIÓN ---
+      window.crearTexto = async function(initialText = "New Text", existingId = null) {
+            if (!existingId) { actorIndex++; }
+            const id = existingId || "Text_" + actorIndex;
+
+            const sprite = new openflLib.display.Sprite();
+            const textField = new openflLib.text.TextField();
+            textField.autoSize = "left";
+            textField.selectable = false;
+            
+            sprite.addChild(textField);
+            stage.addChild(sprite);
+
+            const config = {
+                x: core.types.number(320),
+                y: core.types.number(180),
+                rotation: core.types.number(0),
+                scale: core.types.number(1),
+                opacity: core.types.number(1, { range: [0, 1] }),
+                content: core.types.string(initialText), 
+                fontSize: core.types.number(24),
+                textColor: core.types.rgba({ r: 0, g: 0, b: 0, a: 1 })
+            };
+
+            const tObj = sheet.object(id, config);
+
+            studio.transaction(({ set }) => {
+                set(tObj.props.content, initialText);
+            });
+
+            tObj.onValuesChange((v) => {
+                sprite.x = v.x; sprite.y = v.y;
+                sprite.rotation = v.rotation;
+                sprite.scaleX = sprite.scaleY = v.scale;
+                sprite.alpha = v.opacity;
+
+                // Sync Text & Color
+                textField.text = String(v.content);
+                const r = Math.round(v.textColor.r * 255);
+                const g = Math.round(v.textColor.g * 255);
+                const b = Math.round(v.textColor.b * 255);
+                const fmt = new openflLib.text.TextFormat("_sans", v.fontSize, (r << 16) | (g << 8) | b);
+                textField.setTextFormat(fmt);
+
+                textField.x = -textField.width / 2;
+                textField.y = -textField.height / 2;
+            });
+
+            habilitarTransformaciones(sprite, tObj);
+            registry.set(id, { sprite, tObj, type: "text" });
+            
+            // 🎯 ACTUALIZAR UI DE CAPAS
+            actualizarCapasUI();
+        };
+
+
+
+
+        async function cargarAudio(fileName, existingId = null) {
+            console.warn("🔈 El soporte completo de Audio (volumen/offset) llegará en la v1.2 o v1.5 tras el lanzamiento de Theatre.js 1.0 (Probablemente).");
+            alert("Por ahora, el audio no se reproduce. ¡Pronto habrá control total!"); 
+        }
+
+
+
+                // --- SISTEMA DE RECONSTRUCCIÓN ACTUALIZADO ---
         async function reconstruirDesdeDisco() {
             try {
                 const stateFileHandle = await projectHandle.getFileHandle("state.json");
                 const file = await stateFileHandle.getFile();
                 const json = JSON.parse(await file.text());
 
-                // 2. EXTRAER EL ESTADO (las animaciones y overrides)
                 const projectState = json.state || json;
 
-                // 3. 🔥 RE-INICIALIZAR EL PROYECTO CON EL ESTADO DEL DISCO
-                // Esto carga los keyframes y la línea de tiempo correctamente
-                project = core.getProject("Objectnimator_Project", { state: projectState, experimental: {
-                    usePersistentStorage: false
-                } });
-                // Esperamos a que Theatre procese el estado
-                await project.ready;
+                project = core.getProject("Objectnimator_Project", { 
+                    state: projectState, 
+                    experimental: { usePersistentStorage: false } 
+                });
                 
-                // 4. Obtener la sheet actualizada
+                await project.ready;
                 sheet = project.sheet("Scene_1");
 
                 // Limpieza de OpenFL
@@ -111,29 +173,51 @@
                 const objetos = projectState.sheetsById?.["Scene_1"]?.staticOverrides?.byObject || {};
 
                 for (const id in objetos) {
-                    const fileName = objetos[id].assetSrc;
-                    if (!fileName) continue;
+                    const props = objetos[id];
 
-                    try {
-                        const fileHandle = await assetsFolder.getFileHandle(fileName);
-                        const assetFile = await fileHandle.getFile();
-                        
-                        // Recreamos el objeto vinculándolo al nuevo project/sheet
-                        await crearObjeto(fileName, assetFile, id);
-                    } catch (e) {
-                        console.error(`Error con asset ${fileName}:`, e);
+                    // 1. DETECTAR TEXTO (Basado en el ID o si tiene la propiedad 'contenido')
+                    if (id.startsWith("Texto_") || props.hasOwnProperty('contenido')) {
+                        const textoValor = props.contenido || "Nuevo Texto";
+                        await crearTexto(textoValor, id);
+                        console.log(`📖 Texto reconstruido: ${id}`);
+                    } 
+                    
+                    // 2. DETECTAR AUDIO (Basado en el ID)
+                    else if (id.startsWith("Audio_")) {
+                        const fileName = props.assetSrc;
+                        if (fileName) {
+                            await cargarAudio(fileName, id);
+                            console.log(`🎵 Audio reconstruido: ${fileName}`);
+                        }
+                    }
+
+                    // 3. DETECTAR ACTOR / IMAGEN (Por defecto o prefijo Actor_)
+                    else {
+                        const fileName = props.assetSrc;
+                        if (!fileName) continue;
+
+                        try {
+                            const fileHandle = await assetsFolder.getFileHandle(fileName);
+                            const assetFile = await fileHandle.getFile();
+                            
+                            // Recreamos el objeto de imagen
+                            await crearObjeto(fileName, assetFile, id);
+                            console.log(`🖼️ Actor reconstruido: ${fileName}`);
+                        } catch (e) {
+                            console.error(`Error con asset de imagen ${fileName}:`, e);
+                        }
                     }
                 }
                 
-                console.log("🎬 Proyecto e hilo de tiempo cargados desde el disco.");
+                console.log("🎬 Escena completa cargada (Actores, Textos y Audios).");
 
             } catch (e) {
                 console.warn("📂 No se pudo cargar el estado previo:", e);
-                // Si falla (proyecto nuevo), inicializamos uno vacío
                 project = core.getProject("Objectnimator_Project");
                 sheet = project.sheet("Scene_1");
             }
         }
+
 
 
         async function crearObjeto(fileName, fileOrBytes, existingId = null) {
@@ -268,16 +352,39 @@
             const file = e.target.files[0];
             if (!file || !projectHandle) return;
 
+            // 1. Guardar en /assets (Igual para todos los archivos)
             const assetsFolder = await projectHandle.getDirectoryHandle("assets", { create: true });
             const fileHandle = await assetsFolder.getFileHandle(file.name, { create: true });
             const writable = await fileHandle.createWritable();
             await writable.write(file);
             await writable.close();
 
-            const url = URL.createObjectURL(file);
-            crearObjeto(file.name, url);
+            // 2. Determinar el TIPO para enviar al constructor correcto
+            let tipo = "actor"; // por defecto imagen
+            if (file.type.startsWith("audio/")) tipo = "audio";
+
+            // 3. Llamada única al sistema de creación
+            await procesarNuevoAsset(file.name, file, tipo);
+
             e.target.value = '';
         };
+
+        // Función Maestra de Procesamiento
+        async function procesarNuevoAsset(fileName, fileData, tipo) {
+            console.log(`Building: ${tipo} -> ${fileName}`);
+            
+            switch(tipo) {
+                case "audio":
+                    await cargarAudio(fileName); 
+                    break;
+                case "actor":
+                    await crearObjeto(fileName, fileData);
+                    break;
+                default:
+                    console.warn("Tipo de asset no reconocido");
+            }
+        }
+
 
         window.guardarProyectoAlDisco = async () => {
             if (!projectHandle) return alert("❌ No hay carpeta de proyecto vinculada.");

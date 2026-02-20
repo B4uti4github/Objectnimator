@@ -7,14 +7,21 @@ Well, here is **Objectnimator**! A free and open-source app to animate your obje
 Made with essential libraries for modern animation, such as OpenFL and Theatre.js
 
 >[!IMPORTANT]
->**CURRENT STATUS:** In this v1.0, Editing is now fully functional! ✨ 
->You can import assets, transform objects, and animate sequences with real data persistence on your disk. Automatic `preview.html` generation is coming soon! ;DDDDD
+>**CURRENT STATUS (v1.1):** Editing is now fully functional! ✨ 
+>Now featuring **Dynamic Text Rendering** ✍️! You can add, edit, and animate text layers directly in your scene. Import assets, transform objects, and animate sequences with real data persistence on your disc. Automatic `preview.html` generation is coming soon! ;DDDDD
+
+>[!TIP]
+>**Our updated milestones! 🚀**
+>- **v1.1 (Current):** Dynamic Text Rendering & Layer Management ✍️🗂️
+>- **v1.2:** Canvas Frame Capturing (Export your animation to video/frames!) 🎞️✨
+>- **v1.3:** Vector Graphics & Shapes 🌟 and our API Automation Script (Probably)
+>- **v1.4:** Motion Blur and GLSL Shaders Blueprints ☄️
+>- **v1.5:** Audio Synchronization (Voices & SFX) 🔊
+>- **v1.6:** Export Preview.html ;D
+
 
 >[!NOTE] 
 >We recommend that you know how to program in HTML, CSS, and JS to contribute to development. Currently, the focus is on developers fixing bugs or creating improvements for the app.
-
->[!TIP]
->For developers: Our next big milestones are **Audio Syncing** (for voices and SFX), **Vector Graphics**, **Dynamic Text Rendering**, and **Final Video Exporting**.
 
 <img src="./default-assets/cinemy.png" alt="cinemy" width="200">
 
