@@ -1,155 +1,401 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App workspace</title>
+    <link rel="shortcut icon" href="cinemy.png" type="image/png">
+    <title>Objectnimator Studio | Rebuild Engine</title>
+    <style>
+        :root { --bg: #0a0a0a; --accent: #5c5cff; --text: #eee; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { height: 45px; background: #000; display: flex; justify-content: center; align-items: center; padding: 25px 1rem; border-bottom: 1px solid #222; }
+        .main { flex: 1; display: flex; }
+        .sidebar { width: 240px; background: #141414; border-right: 1px solid #222; padding: 1rem; display: flex; flex-direction: column; }
+        .viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #1c1c1c; position: relative; }
+        #openfl-container { width: 640px; height: 360px; background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; }
+        .btn-ui { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px; }
+        #file-input { display: none; }
+        .project-card { background:#141414; padding:20px; border-radius:8px; border:1px solid #222; cursor:pointer; transition:0.2s; text-align: center; margin-bottom: 15px; }
+        .project-card:hover { border-color: var(--accent); background: #1a1a1a; }
+        .layer-item { display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; align-items:center; font-size: 12px; }
+    </style>
 </head>
 <body>
-    <header>
-        <span class="appname">Objectnimator</span>
-        <button class="buttonhead">Project</button>
-        <button class="buttonhead">Animation</button>
+
+    <header class="header">
+        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.0</span></div>
     </header>
-    <main>
-        <div id="shortcuters">
-            <h1 class="nameshort" id="nameshort">Shortcuts</h1>
-            <hr color="rgb(32, 32, 32)" id="nameshort2"/>
-            <button class="shortcutsbuttons" id="makeproject" color="rgb(255, 255, 255)" class="Shortcuts">Make a new project</button>
-            <dialog class="ventana" id="dialogmakeproject">
-                <h1>Make a new project</h1>
-                <hr color="rgb(32,32,32)">
-                <button class="ventana" color="rgb(0, 0, 0)" id="cancelpro">Cancel</button>
-                <button class="ventana" id="createproject">Create project</button>
-            </dialog>
-        </div>
-        <video></video>
+
+    <main class="main">
+        <!-- MENÚ DE PROYECTOS -->
+        <section id="project-menu" style="flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto;">
+            <h2 style="color: var(--accent);">Mis Proyectos Locales</h2>
+            <div id="recent-list" style="width: 100%; max-width: 900px; margin-top: 20px;"></div>
+            <button class="btn-ui" onclick="vincularNuevaCarpeta()" style="margin-top: 40px; width: auto; padding: 15px 30px;">+ Vincular Nueva Carpeta</button>
+        </section>
+
+        <!-- EDITOR -->
+        <aside id="editor-sidebar" class="sidebar" style="display: none;">
+            <button class="btn-ui" onclick="document.getElementById('file-input').click()">📁 Importar Asset</button>
+            <input type="file" id="file-input" accept="image/*">
+            <div id="layer-container" style="margin-top: 20px; flex: 1; overflow-y: auto;">
+                <p style="color: #666; font-size: 10px; text-transform: uppercase;">Objetos en Disco</p>
+            </div>
+            <div style="margin-top: auto;">
+                <button class="btn-ui" style="background: #222;" onclick="guardarProyectoAlDisco()">💾 Guardar Cambios</button>
+                <button class="btn-ui" style="background: #444;" onclick="location.reload()">🏠 Menú Principal</button>
+            </div>
+        </aside>
+
+        <section id="editor-viewport" class="viewport" style="display: none;">
+            <div id="openfl-container"></div>
+        </section>
     </main>
-    <footer>
-        <h3 class="crefooter">Made with love for our community, dedicated to </h3>
-        <a class="BFDI" href="https://www.youtube.com/@BFDI">jacknjellify</a>
-        <h6>Comment on something you dislike or that doesn't look right or isn't right in the app, such as an issue on GitHub Issues.</h6>
-    </footer>
-    <style>
-        .crefooter{
-            padding: 10px;
-            place-content: center;
-            margin: auto;
-        }
-        .lienzo{
-            position: relative;
-            display: grid;
-            background-color: white;
-            overflow: hidden;
-            visibility: hidden;
-            width:  100%;
-            aspect-ratio: 16 / 9;
-            height: 100%;
-        }
-        .ventana{
-            padding: 10px;
-            border-radius: 20px;
-            background-color: rgb(206, 206, 206);
-            border-color: rgb(94, 94, 94);
-            justify-content: center;
-            place-content: center;
-            margin-left: auto;
-            margin-right: auto;
-            border-style: solid;
-        }
-        a{
-            margin: auto;
-            place-content: center;
-            color: white;
-        }
-        .appname{
-            font-family: cursive;
-        }
-        .buttonhead{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0);
-            border-style: solid;
-            border-radius: 5px;
-            margin: 15px;
-            color: white;
-            border-color: rgb(165, 165, 165);
-            display: inline-block;
-        }
-        .shortcutsbuttons{
-            border-style: solid;
-            border-radius: 5px;
-            margin: 15px;
-            padding: 20px;
-            background-color: rgb(206, 206, 206);
-            color: black;
-            border-color: rgb(167, 167, 167);
-        }
-        header{
-            color: white;
-            align-items: center;
-            display: flex;
-            justify-content: flex-start;
-            background-color: rgb(24, 24, 24);
-        }
-        footer{
-            margin: auto;
-            width: 100%;
-            font-family: Arial, Helvetica, sans-serif;
-            display: grid;
-            color: white;
-            margin: auto;
-            justify-content: center;
-            align-items: center;
-            place-content: center;
-            background-color: black;
-        }
-        body{
-            background-color: beige;
-        }
-        .Shortcuts{
-            border-color: rgb(32, 32, 32);
-            color: black;
-        }
-        main{
-            overflow: auto;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
-            aspect-ratio: 16 / 9;
-            width: 100%;
-            height: 100%;
-            margin: auto;
-        }
-        .nameshort{
-            color: black;
-        }
-    </style>
+
     <script>
-        //The variables 
-        const dialogmakepro = document.getElementById("dialogmakeproject")
-        const buttonmakepro = document.getElementById("makeproject")
-        const cancel = document.getElementById("cancelpro")
-        const createpro = document.getElementById("createproject")
-        const lienzo = document.getElementById("lienzo")
-        const shortcuts = document.getElementById("nameshort")
-        const shortcuts2 = document.getElementById("nameshort2")
-        const shortcuters = document.getElementById("shortcuters")
-        //button functions
-        buttonmakepro.addEventListener("click", () => {
-            dialogmakepro.showModal()
-        })
-        cancel.addEventListener("click", () => {
-            dialogmakepro.close()
-        })
-        // create a project
-        createpro.addEventListener("click", () => {
-            dialogmakepro.close()
-            buttonmakepro.disabled = true
-            buttonmakepro.style.opacity = "0%"
-            lienzo.style.visibility = "visible"
-            shortcuts.style.visibility = "hidden"
-            shortcuts2.style.opacity = "0%"
-            shortcuters.remove()
-        })
+        window.process = { env: { NODE_ENV: 'development' } };
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/openfl@9.5.1/dist/openfl.min.js"></script>
+
+    <script type="module">
+        import 'https://unpkg.com/@theatre/browser-bundles/dist/core-and-studio.js'
+
+        const core = Theatre.core
+        // here, studio is equal to `import studio from '@theatre/studio`.
+        // Note this would be undefined if you're using `core-only.min.js`
+        const studio = Theatre.studio
+
+        let projectHandle = null;
+        let carpetasGuardadas = JSON.parse(localStorage.getItem("objn_recent") || "[]");
+        const registry = new Map();
+        const openflLib = window.openfl;
+        let actorIndex = 0; // Este número solo sube, nunca baja
+
+        studio.initialize();
+        studio.ui.hide();
+
+        const project = core.getProject("Objectnimator_Project");
+        const sheet = project.sheet("Scene_1");
+        const stage = new openflLib.display.Stage(640, 360, 0xFFFFFF);
+        document.getElementById("openfl-container").appendChild(stage.element);
+
+        // --- SISTEMA DE RECONSTRUCCIÓN ---
+       async function reconstruirDesdeDisco() {
+            try {
+                const stateFileHandle = await projectHandle.getFileHandle("state.json");
+                const json = JSON.parse(await (await stateFileHandle.getFile()).text());
+                const projectState = json.state || json;
+
+                while(stage.numChildren > 0) stage.removeChildAt(0);
+                registry.clear();
+
+                const assetsFolder = await projectHandle.getDirectoryHandle("assets");
+                const sheetId = sheet.address.sheetId; 
+                const objetos = projectState.sheetsById?.[sheetId]?.staticOverrides?.byObject || {};
+
+                for (const id in objetos) {
+                    const fileName = objetos[id].assetSrc;
+                    if (!fileName) continue;
+
+                    try {
+                        // Obtenemos el archivo real del disco
+                        const fileHandle = await assetsFolder.getFileHandle(fileName);
+                        const file = await fileHandle.getFile();
+                        
+                        // PASAMOS EL OBJETO FILE DIRECTAMENTE
+                        await crearObjeto(fileName, file, id);
+                    } catch (e) {
+                        console.error(`Fallo técnico con ${fileName}:`, e);
+                    }
+                }
+            } catch (e) {
+                console.log("📂 Proyecto nuevo o vacío.", e);
+            }
+        }
+
+
+        async function crearObjeto(fileName, fileOrBytes, existingId = null) {
+            if (!existingId) { actorIndex++; }
+            const id = existingId || "Actor_" + actorIndex;
+
+            const sprite = new openflLib.display.Sprite();
+            const loader = new openflLib.display.Loader();
+            
+            loader.contentLoaderInfo.addEventListener("complete", () => {
+                loader.x = -loader.width / 2;
+                loader.y = -loader.height / 2;
+            });
+
+            try {
+                let file;
+                if (fileOrBytes instanceof File) {
+                    file = fileOrBytes;
+                } else {
+                    const assetsDir = await projectHandle.getDirectoryHandle('assets');
+                    const fileHandle = await assetsDir.getFileHandle(fileName);
+                    file = await fileHandle.getFile();
+                }
+
+                const buffer = await file.arrayBuffer();
+                const byteArray = openflLib.utils.ByteArray.fromArrayBuffer(buffer);
+                loader.loadBytes(byteArray);
+                console.log(`✅ ${id} (${fileName}) cargado.`);
+
+            } catch (e) {
+                console.error("Fallo en la carga de bytes para:", fileName, e);
+            }
+
+            sprite.addChild(loader);
+            stage.addChild(sprite);
+
+            // --- CONFIGURACIÓN THEATRE.JS ---
+            const config = {
+                x: core.types.number(320),
+                y: core.types.number(180),
+                rotation: core.types.number(0),
+                scaleX: core.types.number(1),
+                scaleY: core.types.number(1),
+                opacity: core.types.number(1, { range: [0, 1] }),
+                assetSrc: core.types.string("") 
+            };
+
+            const tObj = sheet.object(id, config);
+
+            // 🎯 FORZAR EL REGISTRO DE ASSET:
+            // Usamos studio.transaction para que Theatre marque 'assetSrc' como "modificado".
+            // Esto garantiza que aparezca en el state.json aunque no se haya tocado en el Studio.
+            studio.transaction(({ set }) => {
+                set(tObj.props.assetSrc, fileName);
+            });
+
+            let lastLoadedAsset = fileName;
+
+            tObj.onValuesChange(async (v) => {
+                sprite.x = v.x; 
+                sprite.y = v.y;
+                sprite.rotation = v.rotation; 
+                sprite.scaleX = v.scaleX; 
+                sprite.scaleY = v.scaleY;
+                sprite.alpha = v.opacity;
+
+                // Si el assetSrc cambia manualmente en el panel o por código
+                if (v.assetSrc !== lastLoadedAsset && v.assetSrc !== "") {
+                    console.log(`🔄 Swapping a: ${v.assetSrc}`);
+                    lastLoadedAsset = v.assetSrc;
+                    try {
+                        const assetsDir = await projectHandle.getDirectoryHandle('assets');
+                        const fHandle = await assetsDir.getFileHandle(v.assetSrc);
+                        const f = await fHandle.getFile();
+                        const b = await f.arrayBuffer();
+                        loader.loadBytes(openflLib.utils.ByteArray.fromArrayBuffer(b));
+                    } catch (err) { 
+                        console.error("Error en swapping de bytes:", err); 
+                    }
+                }
+            });
+
+            habilitarTransformaciones(sprite, tObj);
+            registry.set(id, { sprite, tObj, fileName: lastLoadedAsset });
+            if (typeof actualizarCapasUI === "function") actualizarCapasUI();
+        }
+
+
+        // --- FILE SYSTEM VINCULACIÓN ---
+        window.vincularNuevaCarpeta = async () => {
+            try {
+                // 1. Pedir la carpeta
+                const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                
+                // 2. FORZAR el permiso (Esto quita el error de Acceso Denegado)
+                const permiso = await handle.requestPermission({ mode: 'readwrite' });
+                
+                if (permiso !== 'granted') {
+                    alert("Se requiere permiso de escritura para trabajar.");
+                    return;
+                }
+
+                projectHandle = handle;
+
+                // Guardar en el historial
+                if (!carpetasGuardadas.includes(projectHandle.name)) {
+                    carpetasGuardadas.push(projectHandle.name);
+                    localStorage.setItem("objn_recent", JSON.stringify(carpetasGuardadas));
+                }
+
+                // 3. Cambiar la interfaz
+                document.getElementById("project-menu").style.display = "none";
+                document.getElementById("editor-sidebar").style.display = "flex";
+                document.getElementById("editor-viewport").style.display = "flex";
+                studio.ui.restore();
+
+                // 4. AHORA SÍ, reconstruir con la seguridad de tener el permiso
+                await reconstruirDesdeDisco();
+
+            } catch (e) {
+                if (e.name === 'AbortError') {
+                    console.log("Selección cancelada.");
+                } else {
+                    console.error("Error de acceso real:", e);
+                }
+            }
+        };
+
+
+        // --- IMPORTACIÓN Y PERSISTENCIA ---
+        document.getElementById('file-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file || !projectHandle) return;
+
+            const assetsFolder = await projectHandle.getDirectoryHandle("assets", { create: true });
+            const fileHandle = await assetsFolder.getFileHandle(file.name, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(file);
+            await writable.close();
+
+            const url = URL.createObjectURL(file);
+            crearObjeto(file.name, url);
+            e.target.value = '';
+        };
+
+        window.guardarProyectoAlDisco = async () => {
+            if (!projectHandle) return alert("❌ No hay carpeta de proyecto vinculada.");
+
+            try {
+                const projectId = project.address.projectId; 
+                // Obtenemos el estado actual del Studio (incluye los assetSrc que forzamos con el set)
+                const state = studio.createContentOfSaveFile(projectId);
+
+                // --- 1. PREPARAR EL BUNDLE DE DATOS ---
+                const saveBundle = { 
+                    projectId, 
+                    state
+                };
+
+                // --- 2. GUARDAR STATE.JSON ---
+                // Este archivo es el corazón: contiene posiciones, escalas y rutas de assets
+                const stateHandle = await projectHandle.getFileHandle("state.json", { create: true });
+                const writableState = await stateHandle.createWritable();
+                
+                // Guardamos con indentación de 2 espacios para que sea legible
+                await writableState.write(JSON.stringify(saveBundle, null, 2));
+                await writableState.close();
+
+                console.log("💾 Datos del proyecto sincronizados en state.json");
+                alert("✅ Datos guardados correctamente en el disco.");
+
+            } catch (err) {
+                console.error(" Error crítico al guardar datos:", err);
+                alert("❌ Error al guardar el estado: " + err.message);
+            }
+        };
+
+
+
+
+        function actualizarCapasUI() {
+            const container = document.getElementById("layer-container");
+            container.innerHTML = '<p style="color: #666; font-size: 10px; text-transform: uppercase;">Objetos</p>';
+            registry.forEach((data, id) => {
+                const item = document.createElement("div");
+                item.className = "layer-item";
+                item.innerHTML = `<span>○ ${id}</span> <button style="color:red;border:none;background:none;cursor:pointer;" onclick="eliminarDesdeTheatre('${id}')">×</button>`;
+                container.appendChild(item);
+            });
+        }
+
+        window.eliminarDesdeTheatre = async (id) => {
+            const data = registry.get(id);
+            if (!data) return;
+
+            // 1. LIMPIEZA DE SUSCRIPCIONES (¡Vital!)
+            // En la 0.7, dejar onValuesChange vivos tras borrar causa fugas de memoria
+            if (data.unsubscribe) {
+                data.unsubscribe();
+            }
+
+            // 2. BORRAR DATOS DEL ESTADO (Studio)
+            // Hacemos el unset ANTES de desvincular para que Theatre sepa qué borrar
+            studio.transaction(({ unset }) => {
+                // En la 0.7.1, esto elimina los keyframes del JSON del proyecto
+                unset(data.tObj.props); 
+            });
+
+            // 3. DESVINCULAR DE LA HOJA (UI de Theatre)
+            // En la 0.7.1, la forma correcta sigue siendo a través de la sheet
+            try {
+                if (typeof sheet.detachObject === "function") {
+                    sheet.detachObject(id);
+                } else {
+                    // Si tu objeto tiene el método directo (depende del build)
+                    data.tObj.detach?.();
+                }
+            } catch (e) {
+                console.warn(`No se pudo quitar ${id} de la UI automáticamente.`, e);
+            }
+
+            // 4. LIMPIEZA VISUAL (OpenFL)
+            if (data.sprite && data.sprite.parent) {
+                data.sprite.parent.removeChild(data.sprite);
+            }
+
+            // 5. ELIMINAR DEL REGISTRO LOCAL
+            registry.delete(id);
+            
+            // 6. REFRESCAR UI PROPIA
+            if (typeof actualizarCapasUI === "function") {
+                actualizarCapasUI();
+            }
+
+            console.log(`[ObjectNimator] Actor ${id} eliminado completamente.`);
+        };
+
+
+        function habilitarTransformaciones(sprite, tObj) {
+            sprite.buttonMode = true;
+            sprite.useHandCursor = true;
+
+            const alMover = () => {
+                // Usamos una transacción de estudio para que Theatre.js se entere del movimiento
+                studio.transaction(({ set }) => {
+                    set(tObj.props.x, sprite.x);
+                    set(tObj.props.y, sprite.y);
+                });
+            };
+
+            sprite.addEventListener("mouseDown", (e) => {
+                // Traer al frente visualmente
+                stage.addChild(sprite);
+                
+                // Iniciar drag de OpenFL
+                sprite.startDrag();
+
+                // Escuchamos el movimiento en el stage para mayor suavidad
+                stage.addEventListener("mouseMove", alMover);
+
+                // Definimos el stop de forma interna para limpiar todo
+                const alSoltar = () => {
+                    sprite.stopDrag();
+                    stage.removeEventListener("mouseMove", alMover);
+                    stage.removeEventListener("mouseUp", alSoltar);
+                };
+
+                stage.addEventListener("mouseUp", alSoltar);
+            });
+        }
+
+
+        // Render inicial de proyectos recientes
+        (function renderRecientes() {
+            const list = document.getElementById("recent-list");
+            carpetasGuardadas.forEach(path => {
+                const card = document.createElement("div");
+                card.className = "project-card";
+                card.innerHTML = `<strong>📁 ${path}</strong>`;
+                card.onclick = () => window.vincularNuevaCarpeta();
+                list.appendChild(card);
+            });
+        })();
     </script>
 </body>
 </html>
