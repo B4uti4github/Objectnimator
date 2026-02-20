@@ -75,42 +75,60 @@
         studio.initialize();
         studio.ui.hide();
 
-        const project = core.getProject("Objectnimator_Project");
-        const sheet = project.sheet("Scene_1");
         const stage = new openflLib.display.Stage(640, 360, 0xFFFFFF);
         document.getElementById("openfl-container").appendChild(stage.element);
+        let project = null;
+        let sheet = null;
 
         // --- SISTEMA DE RECONSTRUCCIÓN ---
-       async function reconstruirDesdeDisco() {
+        async function reconstruirDesdeDisco() {
             try {
                 const stateFileHandle = await projectHandle.getFileHandle("state.json");
-                const json = JSON.parse(await (await stateFileHandle.getFile()).text());
+                const file = await stateFileHandle.getFile();
+                const json = JSON.parse(await file.text());
+
+                // 2. EXTRAER EL ESTADO (las animaciones y overrides)
                 const projectState = json.state || json;
 
+                // 3. 🔥 RE-INICIALIZAR EL PROYECTO CON EL ESTADO DEL DISCO
+                // Esto carga los keyframes y la línea de tiempo correctamente
+                project = core.getProject("Objectnimator_Project", { state: projectState });
+                
+                // Esperamos a que Theatre procese el estado
+                await project.ready;
+                
+                // 4. Obtener la sheet actualizada
+                sheet = project.sheet("Scene_1");
+
+                // Limpieza de OpenFL
                 while(stage.numChildren > 0) stage.removeChildAt(0);
                 registry.clear();
 
                 const assetsFolder = await projectHandle.getDirectoryHandle("assets");
-                const sheetId = sheet.address.sheetId; 
-                const objetos = projectState.sheetsById?.[sheetId]?.staticOverrides?.byObject || {};
+                const objetos = projectState.sheetsById?.["Scene_1"]?.staticOverrides?.byObject || {};
 
                 for (const id in objetos) {
                     const fileName = objetos[id].assetSrc;
                     if (!fileName) continue;
 
                     try {
-                        // Obtenemos el archivo real del disco
                         const fileHandle = await assetsFolder.getFileHandle(fileName);
-                        const file = await fileHandle.getFile();
+                        const assetFile = await fileHandle.getFile();
                         
-                        // PASAMOS EL OBJETO FILE DIRECTAMENTE
-                        await crearObjeto(fileName, file, id);
+                        // Recreamos el objeto vinculándolo al nuevo project/sheet
+                        await crearObjeto(fileName, assetFile, id);
                     } catch (e) {
-                        console.error(`Fallo técnico con ${fileName}:`, e);
+                        console.error(`Error con asset ${fileName}:`, e);
                     }
                 }
+                
+                console.log("🎬 Proyecto e hilo de tiempo cargados desde el disco.");
+
             } catch (e) {
-                console.log("📂 Proyecto nuevo o vacío.", e);
+                console.warn("📂 No se pudo cargar el estado previo:", e);
+                // Si falla (proyecto nuevo), inicializamos uno vacío
+                project = core.getProject("Objectnimator_Project");
+                sheet = project.sheet("Scene_1");
             }
         }
 
