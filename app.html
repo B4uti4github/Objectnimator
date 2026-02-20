@@ -71,6 +71,8 @@
         const registry = new Map();
         const openflLib = window.openfl;
         let actorIndex = 0; // Este número solo sube, nunca baja
+        
+        localStorage.removeItem('theatre-0.4.persistent'); 
 
         studio.initialize();
         studio.ui.hide();
@@ -92,8 +94,9 @@
 
                 // 3. 🔥 RE-INICIALIZAR EL PROYECTO CON EL ESTADO DEL DISCO
                 // Esto carga los keyframes y la línea de tiempo correctamente
-                project = core.getProject("Objectnimator_Project", { state: projectState });
-                
+                project = core.getProject("Objectnimator_Project", { state: projectState, experimental: {
+                    usePersistentStorage: false
+                } });
                 // Esperamos a que Theatre procese el estado
                 await project.ready;
                 
