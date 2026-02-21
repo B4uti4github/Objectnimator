@@ -22,7 +22,7 @@
 <body>
 
     <header class="header">
-        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1</span></div>
+        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1.5</span></div>
     </header>
 
     <main class="main">
@@ -85,22 +85,26 @@
         let sheet = null;
 
       window.crearTexto = async function(initialText = "New Text", existingId = null) {
-            if (!existingId) { actorIndex++; }
+            if (!existingId) actorIndex++;
             const id = existingId || "Text_" + actorIndex;
 
             const sprite = new openflLib.display.Sprite();
             const textField = new openflLib.text.TextField();
+            const matrix = new openflLib.geom.Matrix();
+
             textField.autoSize = "left";
             textField.selectable = false;
-            
             sprite.addChild(textField);
             stage.addChild(sprite);
 
             const config = {
+                parentId: core.types.string(""),
                 x: core.types.number(320),
                 y: core.types.number(180),
                 rotation: core.types.number(0),
                 scale: core.types.number(1),
+                skewX: core.types.number(0),
+                skewY: core.types.number(0),
                 opacity: core.types.number(1, { range: [0, 1] }),
                 content: core.types.string(initialText), 
                 fontSize: core.types.number(24),
@@ -108,35 +112,56 @@
             };
 
             const tObj = sheet.object(id, config);
-
-            studio.transaction(({ set }) => {
-                set(tObj.props.content, initialText);
-            });
+            let currentParentId = "";
 
             tObj.onValuesChange((v) => {
-                sprite.x = v.x; sprite.y = v.y;
-                sprite.rotation = v.rotation;
-                sprite.scaleX = sprite.scaleY = v.scale;
-                sprite.alpha = v.opacity;
+                // 1. GESTIÓN DE PADRE
+                if (v.parentId !== currentParentId) {
+                    currentParentId = v.parentId;
+                    const nuevoPadre = (v.parentId && registry.has(v.parentId)) 
+                        ? registry.get(v.parentId).sprite 
+                        : stage;
+                    if (sprite.parent !== nuevoPadre) nuevoPadre.addChild(sprite);
+                }
 
-                // Sync Text & Color
+                // 2. ACTUALIZAR TEXTO PRIMERO (Para tener width/height reales)
                 textField.text = String(v.content);
                 const r = Math.round(v.textColor.r * 255);
                 const g = Math.round(v.textColor.g * 255);
                 const b = Math.round(v.textColor.b * 255);
-                const fmt = new openflLib.text.TextFormat("_sans", v.fontSize, (r << 16) | (g << 8) | b);
+                const colorVal = ((r << 16) | (g << 8) | b) >>> 0;
+                
+                const fmt = new openflLib.text.TextFormat("_sans", v.fontSize, colorVal);
+                textField.defaultTextFormat = fmt;
                 textField.setTextFormat(fmt);
 
-                textField.x = -textField.width / 2;
-                textField.y = -textField.height / 2;
+                // 3. MATRIZ (Ahora width/height son correctos)
+                matrix.identity();
+                
+                // Pivot: Centramos el TextField internamente
+                // Nota: textField.x/y deben ser 0 porque la matriz maneja el offset
+                textField.x = 0; 
+                textField.y = 0;
+                matrix.translate(-textField.width / 2, -textField.height / 2);
+
+                // Transformaciones
+                matrix.scale(v.scale, v.scale);
+                matrix.c = Math.tan(v.skewX * (Math.PI / 180));
+                matrix.b = Math.tan(v.skewY * (Math.PI / 180));
+                matrix.rotate(v.rotation * (Math.PI / 180));
+                matrix.translate(v.x, v.y);
+
+                // 4. APLICAR TODO AL SPRITE
+                sprite.transform.matrix = matrix;
+                sprite.alpha = v.opacity * v.textColor.a;
             });
 
             habilitarTransformaciones(sprite, tObj);
             registry.set(id, { sprite, tObj, type: "text" });
-            
-            // 🎯 ACTUALIZAR UI DE CAPAS
             actualizarCapasUI();
         };
+
+
 
 
 
@@ -221,17 +246,23 @@
 
 
         async function crearObjeto(fileName, fileOrBytes, existingId = null) {
-            if (!existingId) { actorIndex++; }
+            if (!existingId) actorIndex++;
             const id = existingId || "Actor_" + actorIndex;
 
             const sprite = new openflLib.display.Sprite();
             const loader = new openflLib.display.Loader();
-            
+            const matrix = new openflLib.geom.Matrix();
+
+            sprite.addChild(loader);
+            stage.addChild(sprite);
+
+            // 🎯 IMPORTANTE: No tocamos loader.x/y manualmente.
+            // Dejamos que la matriz se encargue del centrado dinámico.
             loader.contentLoaderInfo.addEventListener("complete", () => {
-                loader.x = -loader.width / 2;
-                loader.y = -loader.height / 2;
+                console.log(`✅ Asset ${id} listo.`);
             });
 
+            // --- CARGA DE BYTES (Simplificada) ---
             try {
                 let file;
                 if (fileOrBytes instanceof File) {
@@ -241,52 +272,63 @@
                     const fileHandle = await assetsDir.getFileHandle(fileName);
                     file = await fileHandle.getFile();
                 }
-
                 const buffer = await file.arrayBuffer();
-                const byteArray = openflLib.utils.ByteArray.fromArrayBuffer(buffer);
-                loader.loadBytes(byteArray);
-                console.log(`✅ ${id} (${fileName}) cargado.`);
+                loader.loadBytes(openflLib.utils.ByteArray.fromArrayBuffer(buffer));
+            } catch (e) { console.error("Error cargando:", e); }
 
-            } catch (e) {
-                console.error("Fallo en la carga de bytes para:", fileName, e);
-            }
-
-            sprite.addChild(loader);
-            stage.addChild(sprite);
-
-            // --- CONFIGURACIÓN THEATRE.JS ---
             const config = {
+                parentId: core.types.string(""),
                 x: core.types.number(320),
                 y: core.types.number(180),
                 rotation: core.types.number(0),
                 scaleX: core.types.number(1),
                 scaleY: core.types.number(1),
+                skewX: core.types.number(0),
+                skewY: core.types.number(0),
                 opacity: core.types.number(1, { range: [0, 1] }),
-                assetSrc: core.types.string("") 
+                assetSrc: core.types.string(fileName) 
             };
 
             const tObj = sheet.object(id, config);
-
-            // 🎯 FORZAR EL REGISTRO DE ASSET:
-            // Usamos studio.transaction para que Theatre marque 'assetSrc' como "modificado".
-            // Esto garantiza que aparezca en el state.json aunque no se haya tocado en el Studio.
-            studio.transaction(({ set }) => {
-                set(tObj.props.assetSrc, fileName);
-            });
-
+            let currentParentId = "";
             let lastLoadedAsset = fileName;
 
             tObj.onValuesChange(async (v) => {
-                sprite.x = v.x; 
-                sprite.y = v.y;
-                sprite.rotation = v.rotation; 
-                sprite.scaleX = v.scaleX; 
-                sprite.scaleY = v.scaleY;
+                // 1. LÓGICA DE PARENTING
+                if (v.parentId !== currentParentId) {
+                    currentParentId = v.parentId;
+                    const nuevoPadre = (v.parentId && registry.has(v.parentId)) 
+                        ? registry.get(v.parentId).sprite 
+                        : stage;
+                    if (sprite.parent !== nuevoPadre) nuevoPadre.addChild(sprite);
+                }
+
+                // 2. MATRIZ CON PIVOT DINÁMICO
+                matrix.identity();
+
+                // Aseguramos que el loader esté en 0,0 para que la matriz tenga control total
+                loader.x = 0;
+                loader.y = 0;
+
+                // Centrado: Movemos el dibujo la mitad de su tamaño hacia atrás
+                // Esto hace que rote e incline sobre su centro exacto.
+                matrix.translate(-loader.width / 2, -loader.height / 2);
+
+                // Transformaciones
+                matrix.scale(v.scaleX, v.scaleY);
+                matrix.c = Math.tan(v.skewX * (Math.PI / 180));
+                matrix.b = Math.tan(v.skewY * (Math.PI / 180));
+                matrix.rotate(v.rotation * (Math.PI / 180));
+                
+                // Posición final
+                matrix.translate(v.x, v.y);
+
+                // 3. APLICACIÓN ATÓMICA
+                sprite.transform.matrix = matrix;
                 sprite.alpha = v.opacity;
 
-                // Si el assetSrc cambia manualmente en el panel o por código
+                // --- SWAPPING DE ASSETS ---
                 if (v.assetSrc !== lastLoadedAsset && v.assetSrc !== "") {
-                    console.log(`🔄 Swapping a: ${v.assetSrc}`);
                     lastLoadedAsset = v.assetSrc;
                     try {
                         const assetsDir = await projectHandle.getDirectoryHandle('assets');
@@ -294,16 +336,16 @@
                         const f = await fHandle.getFile();
                         const b = await f.arrayBuffer();
                         loader.loadBytes(openflLib.utils.ByteArray.fromArrayBuffer(b));
-                    } catch (err) { 
-                        console.error("Error en swapping de bytes:", err); 
-                    }
+                    } catch (err) { console.error("Error en swapping:", err); }
                 }
             });
 
             habilitarTransformaciones(sprite, tObj);
-            registry.set(id, { sprite, tObj, fileName: lastLoadedAsset });
-            if (typeof actualizarCapasUI === "function") actualizarCapasUI();
+            registry.set(id, { sprite, tObj, fileName: lastLoadedAsset, type: "actor" });
+            actualizarCapasUI();
         }
+
+
 
 
         // --- FILE SYSTEM VINCULACIÓN ---
@@ -483,27 +525,41 @@
             sprite.buttonMode = true;
             sprite.useHandCursor = true;
 
-            const alMover = () => {
-                // Usamos una transacción de estudio para que Theatre.js se entere del movimiento
+            let offset = { x: 0, y: 0 };
+
+            const alMover = (e) => {
+                if (!sprite.parent) return;
+
+                // 1. Obtener posición del mouse relativa al contenedor
+                const mouseEnPadre = sprite.parent.globalToLocal(new openflLib.geom.Point(e.stageX, e.stageY));
+
+                // 2. Actualizar Theatre.js (esto dispara el onValuesChange y la matriz)
                 studio.transaction(({ set }) => {
-                    set(tObj.props.x, sprite.x);
-                    set(tObj.props.y, sprite.y);
+                    set(tObj.props.x, mouseEnPadre.x - offset.x);
+                    set(tObj.props.y, mouseEnPadre.y - offset.y);
                 });
             };
 
             sprite.addEventListener("mouseDown", (e) => {
-                // Traer al frente visualmente
-                stage.addChild(sprite);
-                
-                // Iniciar drag de OpenFL
-                sprite.startDrag();
+                if (!sprite.parent) return;
 
-                // Escuchamos el movimiento en el stage para mayor suavidad
+                // Traer al frente
+                sprite.parent.addChild(sprite);
+
+                // 🎯 EVITAR EL SALTO: 
+                // Calculamos el offset basándonos en la posición VISUAL real en el escenario
+                // en lugar de confiar ciegamente en el valor numérico de Theatre.
+                const rect = sprite.getBounds(sprite.parent);
+                const mouseEnPadre = sprite.parent.globalToLocal(new openflLib.geom.Point(e.stageX, e.stageY));
+                
+                // Comparamos el mouse con la propiedad 'x' de Theatre para mantener la coherencia
+                offset.x = mouseEnPadre.x - tObj.value.x;
+                offset.y = mouseEnPadre.y - tObj.value.y;
+
+                // Bloqueamos eventos del stage para evitar conflictos de foco
                 stage.addEventListener("mouseMove", alMover);
 
-                // Definimos el stop de forma interna para limpiar todo
                 const alSoltar = () => {
-                    sprite.stopDrag();
                     stage.removeEventListener("mouseMove", alMover);
                     stage.removeEventListener("mouseUp", alSoltar);
                 };
@@ -511,6 +567,10 @@
                 stage.addEventListener("mouseUp", alSoltar);
             });
         }
+
+
+
+
 
 
         // Render inicial de proyectos recientes
