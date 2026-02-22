@@ -22,7 +22,7 @@
 <body>
 
     <header class="header">
-        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1.5</span></div>
+        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1.6</span></div>
     </header>
 
     <main class="main">
@@ -252,12 +252,12 @@
             const sprite = new openflLib.display.Sprite();
             const loader = new openflLib.display.Loader();
             const matrix = new openflLib.geom.Matrix();
+            // 1. Instancia persistente para no crear objetos en cada frame
+            const colorTrans = new openflLib.geom.ColorTransform();
 
             sprite.addChild(loader);
             stage.addChild(sprite);
 
-            // 🎯 IMPORTANTE: No tocamos loader.x/y manualmente.
-            // Dejamos que la matriz se encargue del centrado dinámico.
             loader.contentLoaderInfo.addEventListener("complete", () => {
                 console.log(`✅ Asset ${id} listo.`);
             });
@@ -286,6 +286,9 @@
                 skewX: core.types.number(0),
                 skewY: core.types.number(0),
                 opacity: core.types.number(1, { range: [0, 1] }),
+                // 2. Nuevas propiedades de color en Theatre.js
+                tintColor: core.types.rgba({ r: 1, g: 1, b: 1, a: 1 }), // Selector de color visual
+                tintAmount: core.types.number(0, { range: [0, 1] }),   // 0 = original, 1 = color total
                 assetSrc: core.types.string(fileName) 
             };
 
@@ -305,27 +308,41 @@
 
                 // 2. MATRIZ CON PIVOT DINÁMICO
                 matrix.identity();
-
-                // Aseguramos que el loader esté en 0,0 para que la matriz tenga control total
                 loader.x = 0;
                 loader.y = 0;
-
-                // Centrado: Movemos el dibujo la mitad de su tamaño hacia atrás
-                // Esto hace que rote e incline sobre su centro exacto.
                 matrix.translate(-loader.width / 2, -loader.height / 2);
-
-                // Transformaciones
                 matrix.scale(v.scaleX, v.scaleY);
                 matrix.c = Math.tan(v.skewX * (Math.PI / 180));
                 matrix.b = Math.tan(v.skewY * (Math.PI / 180));
                 matrix.rotate(v.rotation * (Math.PI / 180));
-                
-                // Posición final
                 matrix.translate(v.x, v.y);
 
-                // 3. APLICACIÓN ATÓMICA
                 sprite.transform.matrix = matrix;
                 sprite.alpha = v.opacity;
+
+                // 3. LÓGICA DE TINTE (ColorTransform)
+                // Convertimos el RGBA de Theatre.js a multiplicadores de OpenFL
+                if (v.tintAmount > 0) {
+                    // Calculamos cuánto del color original se mantiene
+                    const inv = 1 - v.tintAmount;
+                    colorTrans.redMultiplier = inv;
+                    colorTrans.greenMultiplier = inv;
+                    colorTrans.blueMultiplier = inv;
+                    
+                    // Añadimos el color de tinte mediante offsets
+                    colorTrans.redOffset = v.tintColor.r * 255 * v.tintAmount;
+                    colorTrans.greenOffset = v.tintColor.g * 255 * v.tintAmount;
+                    colorTrans.blueOffset = v.tintColor.b * 255 * v.tintAmount;
+                } else {
+                    // Resetear a normal si tintAmount es 0
+                    colorTrans.redMultiplier = 1;
+                    colorTrans.greenMultiplier = 1;
+                    colorTrans.blueMultiplier = 1;
+                    colorTrans.redOffset = 0;
+                    colorTrans.greenOffset = 0;
+                    colorTrans.blueOffset = 0;
+                }
+                sprite.transform.colorTransform = colorTrans;
 
                 // --- SWAPPING DE ASSETS ---
                 if (v.assetSrc !== lastLoadedAsset && v.assetSrc !== "") {
@@ -344,6 +361,7 @@
             registry.set(id, { sprite, tObj, fileName: lastLoadedAsset, type: "actor" });
             actualizarCapasUI();
         }
+
 
 
 
