@@ -210,7 +210,7 @@
                     const props = objetos[id];
 
                     // 1. DETECTAR TEXTO (Basado en el ID o si tiene la propiedad 'content')
-                    if (id.startsWith("Texto_") || props.hasOwnProperty('content')) {
+                    if (id.startsWith("Text_") || id.startsWith("Texto_") || props.hasOwnProperty('content')) {
                         const textoValor = props.content || "Nuevo Texto";
                         await crearTexto(textoValor, id);
                         console.log(`📖 Texto reconstruido: ${id}`);
