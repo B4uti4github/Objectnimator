@@ -34,7 +34,7 @@ Objectnimator is built for making those smooth (and not-so-smooth) 2D moves:
 > - **v1.1:** Words Included✍️🗂️ (DONE)
 > - **v1.1.5:** Matrix Math & Sticky Parenting 🔗📐 (DONE)
 > - **v1.1.6:** Color Tinting! Finally! 🎨✨ (DONE)
-> - **v1.2:** **VIDEO EXPORT & SAVE SYSTEM!** 🎞️💾 (LATEST)
+> - **v1.2:** **VIDEO EXPORT :DDDDDD** 🎞️💾 (LATEST)
 > - **v1.3 (Cooking...):** **SHINY VECTORS & BEZIER SHAPES!** 🌟 Moving the Anchor Point control.
 > - **v1.4:** **MOTION BLUR** (The "Zoooom" effect) ☄️
 > - **v1.5:** Advanced FX & Filters 🪄
