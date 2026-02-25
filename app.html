@@ -275,8 +275,8 @@
             // 3. Configurar el Stream y el Recorder (¡ESTO FALTABA!)
             const stream = canvasElement.captureStream(fps);
             const recorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm; codecs=vp8',
-                videoBitsPerSecond: 2500000 // Calidad Media
+                mimeType: 'video/webm; codecs=vp9',
+                videoBitsPerSecond: 8000000 // Calidad Media
             });
 
             const chunks = [];
