@@ -7,6 +7,10 @@ Well, here is **Objectnimator**! A free and open-source app specifically designe
 Made with the ultimate "Flash-Killer" stack: [OpenFL](https://www.openfl.org) for the engine and [Theatre.js](https://www.theatrejs.com) for the professional timeline.
 
 ---
+> [!IMPORTANT] 
+> We have an error, We'll fix it later, so don't use it for now.
+
+---
 
 ## ✨ Silly & Cool Features (v1.2)
 
