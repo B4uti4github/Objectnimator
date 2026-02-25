@@ -17,12 +17,13 @@
         .project-card { background:#141414; padding:20px; border-radius:8px; border:1px solid #222; cursor:pointer; transition:0.2s; text-align: center; margin-bottom: 15px; }
         .project-card:hover { border-color: var(--accent); background: #1a1a1a; }
         .layer-item { display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; align-items:center; font-size: 12px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } } #render-dialog::backdrop { background:rgba(0,0,0,0.8); backdrop-filter:blur(3px); }
     </style>
 </head>
 <body>
 
     <header class="header">
-        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.1.6</span></div>
+        <div id="app-logo" style="font-family: cursive; font-weight: bold; cursor:pointer;" onclick="location.reload()">Objectnimator <span style="color:var(--accent)">v1.2</span></div>
     </header>
 
     <main class="main">
@@ -43,6 +44,7 @@
                 <p style="color: #666; font-size: 10px; text-transform: uppercase;">Objects in state</p>
             </div>
             <div style="margin-top: auto;">
+                <button class="btn-ui" style="background: #222;" onclick="exportarCaptura()">Export Video</button>
                 <button class="btn-ui" style="background: #222;" onclick="guardarProyectoAlDisco()">💾 Save Changes</button>
                 <button class="btn-ui" style="background: #444;" onclick="location.reload()">🏠 Main Menu</button>
             </div>
@@ -52,6 +54,13 @@
             <div id="openfl-container"></div>
         </section>
     </main>
+
+    <dialog id="render-dialog" style="border:none; border-radius:10px; background:#1a1a1a; color:white; padding:30px; text-align:center; box-shadow: 0 0 20px rgba(0,0,0,0.5); z-index:100;">
+        <div style="border:3px solid #333; border-top:3px solid var(--accent); border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite; margin:0 auto 15px;"></div>
+        <h3 style="margin:0; font-family:sans-serif;">Exporting Video...</h3>
+        <p style="font-size:12px; color:#888;">Please wait, rendering frame by frame.</p>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } } #render-dialog::backdrop { background:rgba(0,0,0,0.8); backdrop-filter:blur(3px); }</style>
+    </dialog>
 
     <script>
         window.process = { env: { NODE_ENV: 'development' } };
@@ -242,6 +251,74 @@
                 sheet = project.sheet("Scene_1");
             }
         }
+
+        window.exportarCaptura = function(fps = 30) {
+            const dialog = document.getElementById('render-dialog');
+            const status = dialog.querySelector('p');
+            const container = document.getElementById("openfl-container");
+            const canvasElement = container.querySelector("canvas"); 
+
+            // 1. Validaciones de seguridad
+            if (!canvasElement) {
+                console.error("OpenFL Canvas not found in #openfl-container");
+                return;
+            }
+            if (typeof sheet === 'undefined') {
+                console.error("Theatre.js 'sheet' is not defined globally!");
+                return;
+            }
+
+            // 2. Bloqueo Visual
+            dialog.showModal();
+            status.innerText = "Preparing render engine...";
+
+            // 3. Configurar el Stream y el Recorder (¡ESTO FALTABA!)
+            const stream = canvasElement.captureStream(fps);
+            const recorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm; codecs=vp8',
+                videoBitsPerSecond: 2500000 // Calidad Media
+            });
+
+            const chunks = [];
+            recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+            // --- Promesa de Descarga ---
+            const procesoFinal = new Promise(resolve => {
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+
+                    const d = new Date();
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                    const timeStr = `${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+                    
+                    a.download = `Objectnimator_${dateStr}_${timeStr}.webm`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    resolve();
+                };
+            });
+
+            // 4. Sincronización y Play con Theatre.js
+            sheet.sequence.position = 0; 
+            status.innerText = "Recording frames...";
+            recorder.start();
+            
+            sheet.sequence.play().then(() => {
+                recorder.stop();
+                status.innerText = "Processing video file...";
+                return procesoFinal;
+            }).then(() => {
+                status.innerText = "Export Successful! ✅";
+                setTimeout(() => {
+                    dialog.close();
+                    status.innerText = "Exporting Animation...";
+                }, 1500);
+            });
+        };
 
 
 
